@@ -19189,8 +19189,6 @@ inline void mark(event_attributes const& attr) noexcept
 }
 
 }
-# 2 "./main.cpp" 2
 
-int main(){
 
-}
+
