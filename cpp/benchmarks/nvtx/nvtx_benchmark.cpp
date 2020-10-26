@@ -2,6 +2,7 @@
 #include <benchmark/benchmark.h>
 
 #include <nvtx3/nvtx3.hpp>
+#include "daniel.hpp"
 
 /**
  * Measure cost of not reusing the same `event_attributes` object
@@ -43,21 +44,28 @@ struct my_domain {
 static void BM_CXX_scoped_range(::benchmark::State& state)
 {
   nvtx3::event_attributes attr{};
-  for (auto _ : state) { nvtx3::domain_thread_range<my_domain> r{attr}; }
+  for (auto _ : state) { nvtx3::domain_thread_range<my_domain> r{"this one is dynamic"}; }
 }
 BENCHMARK(BM_CXX_scoped_range);
+
+NVTX3_DOMAIN( TEST );
+static void BM_daniel_scoped_range(::benchmark::State& state)
+{
+  for (auto _ : state) { daniel::scoped_range tr( TEST, "this one is dynamic" ); }
+}
+BENCHMARK(BM_daniel_scoped_range);
 
 static void BM_C_scoped_range(::benchmark::State& state)
 {
   auto domain = nvtxDomainCreateA("my_domain");
-  nvtx3::event_attributes attr{};
   for (auto _ : state) {
+    nvtx3::event_attributes attr{"this one is dynamic"};
     nvtxDomainRangePushEx(domain, attr.get());
     nvtxDomainRangePop(domain);
   }
   nvtxDomainDestroy(domain);
 }
-BENCHMARK(BM_C_global_range);
+BENCHMARK(BM_C_scoped_range);
 
 ///< Measure cost of the func range macro
 static void BM_func_range(::benchmark::State& state)
